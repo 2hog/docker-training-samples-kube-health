@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: init
+  name: init-container
+spec:
+  volumes:
+  - name: cache-volume
+    emptyDir:
+  initContainers:
+  - name: ready
+    image: alpine
+    command:
+    - sh
+    - -c
+    - echo 'I am ready!' > /cache/healthy
+  - name: create-file
+    image: alpine
+    command:
+    - sh
+    - -c
+    - echo 'I am a file!' > /cache/another-file
+    volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  containers:
+  - name: server
+    image: python:3
+    command:
+    - python3
+    - -m
+    - http.server
+    workingDir: /cache
+    ports:
+    - containerPort: 8000
+    livenessProbe:
+      tcpSocket:
+        port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /cache/healthy
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      successThreshold: 3
+      timeoutSeconds: 1
+    volumeMounts:
+    - mountPath: /cache
+      name: cache-volume

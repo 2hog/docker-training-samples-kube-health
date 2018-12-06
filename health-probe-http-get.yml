@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: health-probe-http-get
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/liveness
+    args:
+    - /server
+    ports:
+    - name: healthz-port
+      containerPort: 8080
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: healthz-port
+        httpHeaders:
+        - name: X-Custom-Header
+          value: Awesome
+        - name: Host
+          value: my-host.com
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 4
+      timeoutSeconds: 5

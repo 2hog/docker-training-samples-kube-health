@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: health-ready
+spec:
+  containers:
+  - name: server
+    image: akalipetis/headers
+    command:
+    - /bin/sh
+    - -c
+    - sleep 10; touch /tmp/healthy; echo ready!; python server.py; echo wtf?!
+    ports:
+    - containerPort: 8000
+    livenessProbe:
+      tcpSocket:
+        port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      successThreshold: 3
+      timeoutSeconds: 1
